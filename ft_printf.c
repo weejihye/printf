@@ -6,58 +6,135 @@
 /*   By: jwee <jwee@student.42seoul.kr>             +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/11 13:40:14 by jwee              #+#    #+#             */
-/*   Updated: 2022/08/16 22:03:18 by jwee             ###   ########.fr       */
+/*   Updated: 2022/08/18 21:48:33 by jwee             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdarg.h>
-#include <stdio.h>
+#include "ft_printf.h"
 
-int ft_printf(const int format, ...)
+void	ft_putchar_rlt(const char *s, t_spec *spec)
+{
+	write(1, s, 1);
+	spec->result++;
+}
+
+void	ft_putstr_rlt(const char *s, t_spec *spec)
+{
+	int	len;
+
+	len = ft_strlen(s);
+	write(1, s, len);
+	spec->result += len;
+}
+
+void	ft_putnbr_rlt(int n, t_spec *spec)
+{
+	long long		nb;
+	unsigned char	c;
+
+	nb = n;
+	if (nb < 0)
+	{
+		write(1, "-", 1);
+		spec->result++;
+		nb *= -1;
+	}
+	if (nb >= 10)
+	{
+		c = nb % 10 + '0';
+		ft_putnbr_rlt(nb / 10, spec);
+	}
+	else
+		c = nb + '0';
+	write(1, &c, 1);
+
+}
+
+void	ft_print_spec(const char *s, va_list ap, t_spec *spec)
+{
+	if (spec->spec == 'c')
+	{
+		spec->c = va_arg(ap, int);
+		ft_putchar_rlt(&spec->c, spec);
+	}
+	else if (spec->spec == 's')
+	{
+		spec->s = va_arg(ap, char *);
+		ft_putstr_rlt(spec->s, spec);
+	}
+	else if (spec->spec == 'd' || spec->spec == 'i')
+	{
+		spec->d = va_arg(ap, int);
+		ft_putnbr_rlt(spec->d, spec);
+	}
+}
+
+void	ft_init_spec(t_spec *spec)
+{
+	spec->spec = 0;
+	spec->c = 0;
+	spec->u = 0;
+	spec->s = 0;
+	spec->d = 0;
+	spec->x = 0;
+	spec->p = 0;
+	spec->result = 0;
+}
+
+int	ft_printf(const char *s, ...)
 {
 	va_list	ap;
-	int		arg;
-	int		i;
+	t_spec	*spec;
 
-	va_start(ap, format);
-	i = 5;
-	printf("%d", format);
-	while (--i > format)
+	spec = malloc(sizeof(t_form));
+	if (!spec)
+		return (-1);
+	ft_init_spec(spec);
+	va_start(ap, s);
+	while (*s)
 	{
-		arg = va_arg(ap, int);
-		printf("%d", arg);
+		if (*s == '%')
+		{
+			s++;
+			spec->spec = *s;
+			ft_print_spec(s, ap, spec);
+			s++;
+		}
+		while (*s != '%')
+		{
+			ft_putchar_rlt(s, spec);
+			s++;
+		}
 	}
-	va_end(ap);
-	return (i);
+	return (spec->result);
 }
-
-int	main(void)
-{
-	int	a = 1, b = 2, c = 3, d = 4;
-	ft_printf(a, b, c, d);
-	return (0);
-}
-
-int	ft_count_set(const char *str)
-{
-	int	i;
-	int	count;
-
-	i = 0;
-	count = 0;
-	while (str[i])
-	{
-		if (str[i] == '%' && str[i - 1] != '%')
-			count++;
-		i++;
-	}
-	return (count);
-}
-
-void	ft_printf(const char *, ...)
-{
-	va_list ap;
-
-	va_start(ap, str);
-	//예외처리
-	i
+//void	ft_specify_format(const char **s)
+//{
+//	t_form	*format;
+//
+//	while (**s)
+//	{
+//		while (ft_isdigit(**s))
+//		{
+//			format->width = format->width * 10 + **s - '0';
+//			s++;
+//		}
+//		if (**s == '-')
+//			format->align = 1;
+//		if (**s == '+')
+//			format->plus = 1;
+//		if (**s == '.')
+//			format->dot = 1;
+//		while (ft_isdigit(**s))
+//		{
+//			format->prec = format->prec * 10 + **s - '0';
+//			(*s)++;
+//		}
+//		if (ft_strchr("cspdiuxX%", **s))
+//		{
+//			format->spec = **s;
+//			s++;
+//		}
+//		s++;
+//	}
+//}
